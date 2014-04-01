@@ -1,0 +1,20 @@
+import javax.swing.*;
+/**
+ * Write a description of class Enemy here.
+ * 
+ * @author (your name) 
+ * @version (a version number or a date)
+ */
+public class Enemy extends JLabel
+{
+	private static final long serialVersionUID = 1L;
+
+	/**
+     * Constructor for objects of class Enemy
+     */
+    public Enemy(Icon image)
+    {
+        super(image);
+    }
+    
+}
