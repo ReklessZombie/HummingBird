@@ -1,0 +1,235 @@
+import java.awt.*;
+import java.awt.event.*;
+
+import javax.swing.*;
+
+import java.util.*;
+import java.util.Timer;
+
+import java.io.*;
+import javax.sound.sampled.*;
+
+
+public class KeyPress extends JFrame {
+    private ImageIcon hummingBirdImage = new ImageIcon("hummingbird.gif");
+    private JLabel healthLabel = new JLabel("Health");
+    private JButton endGame = new JButton("Nope");
+    private JButton restartGame = new JButton("Yes plz");
+    private static final String UPDATE_PROGRESS = "Update Progress";
+    private JProgressBar progressBar = new JProgressBar(0, 100);
+    private Hummingbird hummingBirdLabel = new Hummingbird(hummingBirdImage);
+    private int currentWidth, currentHeight;
+    private Panel panel = new Panel();
+    private Random r = new Random();
+    private Clip clip;
+    private ImageIcon flowerImage = new ImageIcon("flower.png");
+    private JLabel flowerLabel = new JLabel(flowerImage);
+    private ImageIcon enemyImage = new ImageIcon("enemy.gif");
+    //     private Enemy enemy = new Enemy(enemyImage);
+    private java.util.List<Enemy> listOfEnemies = new ArrayList<Enemy>();
+
+    public KeyPress() {
+        // set layout to GridBagLayout. Optimal look and feel
+        setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        currentWidth = panel.getWidth() / 2;
+        currentHeight = panel.getHeight() / 2;
+        hummingBirdLabel.setLocation(currentWidth, currentHeight);
+        progressBar.setMaximumSize(new Dimension(100, 500));
+        progressBar.setValue(hummingBirdLabel.getHealth());
+        setFocusable(true);
+        addKeyListener(new HummingBirdKeyListener());
+        playTune();
+
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.ipadx = 100;
+        c.gridx = 0;
+        c.gridy = 0;
+        add(progressBar, c);
+
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 0;
+        c.gridy = 1;
+        add(healthLabel, c);
+
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.ipady = 650;
+        c.ipadx = 1250;
+        c.weightx = 0.0;
+        c.gridwidth = 3;
+        c.gridx = 0;
+        c.gridy = 2;
+        add(panel, c);
+
+        panel.add(hummingBirdLabel, BorderLayout.CENTER);
+        setVisible(true);
+
+        panel.add(flowerLabel, BorderLayout.SOUTH);
+        flowerLabel.setLocation(r.nextInt(400), r.nextInt(400));
+
+        for(int i = 0; i <= 5; i++){            
+            Enemy currentEnemy = new Enemy(enemyImage);
+            listOfEnemies.add(currentEnemy);
+            currentEnemy.setLocation(r.nextInt(panel.getWidth() - 100),r.nextInt(panel.getHeight() - 100));
+            panel.add(currentEnemy);
+        }
+
+        Timer moveEnemiesTimer = new Timer();
+        moveEnemiesTimer.schedule(new MoveEnemies(), 0, 100);
+        Timer healthTimer = new Timer();
+        healthTimer.schedule(new SubtractHealthInterval(), 0, 1000);
+    }
+
+    private class MoveEnemies extends TimerTask {
+        private static final int SPEED = 8;
+
+        public void run() {
+            for(Enemy enemy : listOfEnemies){
+                int deltaX = hummingBirdLabel.getX() - enemy.getX();
+                int deltaY = hummingBirdLabel.getY() - enemy.getY();
+                double distance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+                double moveX = SPEED / distance * deltaX;
+                double moveY = SPEED / distance * deltaY;
+                int newX = (int) (enemy.getX() + moveX);
+                int newY = (int) (enemy.getY() + moveY);
+                enemy.setLocation(newX, newY);
+            }
+        }
+    }
+
+    //TimerTask kicks off a movement every so often that you put the interval in
+    private class SubtractHealthInterval extends TimerTask{
+        private static final int DECREMENT_AMOUNT = -1;
+        public void run() {
+            //takes 1 health off every second & refreshes health bar
+            hummingBirdLabel.addHealth(DECREMENT_AMOUNT);
+            progressBar.setValue(hummingBirdLabel.getHealth());
+        }
+    }
+
+    public class HummingBirdKeyListener extends KeyAdapter {
+        // can do a .contains() with Set
+        Set<Character> keyList = new HashSet<Character>();
+
+        public void keyPressed(KeyEvent ke) {
+            // KeyPress.this.enemy.run();
+            // enemy.start();
+            char i = ke.getKeyChar();
+            keyList.add(i);
+            final int OFFSET = 15;
+            Iterator<Character> iter = (Iterator<Character>) keyList.iterator();
+            // every time you press a button, it gets added to the set. Holding
+            // them both down loops over both keys
+            while (iter.hasNext()) {
+                i = iter.next();
+                if (i == 'w'
+                && isInBounds(currentWidth, currentHeight - OFFSET)) {
+                    currentHeight -= OFFSET;
+                } else if (i == 'a'
+                && isInBounds(currentWidth - OFFSET, currentHeight)) {
+                    currentWidth -= OFFSET;
+                } else if (i == 's'
+                && isInBounds(currentWidth, currentHeight + OFFSET)) {
+                    currentHeight += OFFSET;
+                } else if (i == 'd'
+                && isInBounds(currentWidth + OFFSET, currentHeight)) {
+                    currentWidth += OFFSET;
+                }
+            }
+            hummingBirdLabel.setLocation(currentWidth, currentHeight);
+            if (isOverlap(flowerLabel, hummingBirdLabel)) {
+                flowerLabel.setLocation(
+                    r.nextInt(KeyPress.this.getWidth() - 100),
+                    r.nextInt(KeyPress.this.getHeight() - 100));
+                hummingBirdLabel.addHealth(10);
+                progressBar.setValue(hummingBirdLabel.getHealth());
+                repaint();
+            }
+            for(Enemy enemy : listOfEnemies){
+                if (isOverlap(enemy, hummingBirdLabel)) {
+                    hummingBirdLabel.addHealth(-10);
+                    progressBar.setValue(hummingBirdLabel.getHealth());
+                    repaint();
+                }
+                if(hummingBirdLabel.getHealth() == 0){
+                    JPanel endScreen = new JPanel();
+                    endScreen.setVisible(false);
+                    restartGame.addActionListener(new ActionListener()
+                        {
+                            public void actionPerformed(ActionEvent e)
+                            {
+                                KeyPress newGame = new KeyPress();
+                            }
+                        });
+                    endScreen.add(restartGame);
+                    endGame.addActionListener(new ActionListener()
+                        {
+                            public void actionPerformed(ActionEvent e)
+                            {
+                                System.exit(0);
+                            }
+                        });
+                    endScreen.add(endGame);
+                }
+            }
+        }
+
+        // removes the key from the Set after the action has been executed
+        public void keyReleased(KeyEvent ke) {
+            char i = ke.getKeyChar();
+            keyList.remove(i);
+        }
+
+        // private helper method for checking the bounds of the image
+        private boolean isInBounds(int x, int y) {
+            int x1 = x + hummingBirdLabel.getWidth();
+            int y1 = y + hummingBirdLabel.getHeight();
+            boolean isUpperLeftCornerInBounds = x >= 0 && y >= 0
+                && x <= panel.getWidth() && y <= panel.getHeight();
+            boolean isLowerRightCornerInBounds = x1 >= 0 && y1 >= 0
+                && x1 <= panel.getWidth() && y1 <= panel.getHeight();
+            return isUpperLeftCornerInBounds && isLowerRightCornerInBounds;
+        }
+
+        public boolean isOverlap(JLabel a, Hummingbird b) {
+            int ax1 = a.getX();
+            int ax2 = ax1 + a.getWidth();
+            int ay1 = a.getY();
+            int ay2 = ay1 + a.getHeight();
+
+            int bx1 = b.getX();
+            int bx2 = bx1 + b.getWidth();
+            int by1 = b.getY();
+            int by2 = by1 + b.getHeight();
+            if (ax1 > bx1 && ax1 < bx2 && ay1 > by1 && ay1 < by2) {
+                return true;
+            }
+
+            if (ax2 > bx1 && ax2 < bx2 && ay1 > by1 && ay1 < by2) {
+                return true;
+            }
+
+            if (ax1 > bx1 && ax1 < bx2 && ay2 > by1 && ay2 < by2) {
+                return true;
+            }
+
+            if (ax2 > bx1 && ax2 < bx2 && ay2 > by1 && ay2 < by2) {
+                return true;
+            }
+            return false;
+        }
+    }
+    public void playTune()
+    {
+        File f = new File("sound.mp3");
+        try//enters a try-catch statement
+        {
+            AudioInputStream audio = AudioSystem.getAudioInputStream(f);//gets the audio from the file
+            clip = AudioSystem.getClip();//obtains a clip that can be used for playing back an audio file or an audio stream.
+            clip.open(audio);//opens the audio
+            clip.start();//starts the clip
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        }
+        catch (Exception e){System.out.println(e.getMessage());}
+    }
+}
