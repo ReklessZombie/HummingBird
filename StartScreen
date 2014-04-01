@@ -1,0 +1,126 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.io.*;
+public class StartScreen
+{
+    JPanel cards; //a panel that uses CardLayout
+    final static String START_SCREEN = "Start Screen";
+    final static String GAME_SCREEN = "Game Screen";
+
+    public void addComponentToPane(Container pane)
+    {
+        //Create the "cards" to make it easier for screen layering. I plan on actually making the gameScreen a card, later.
+        //I'm having focus problems with the gameScreen, though. The game runs, but it isnt able to be controlled when placing it in a second card
+        JPanel card1 = new JPanel();
+        card1.setPreferredSize(new Dimension(300, 100));
+        //starts the game
+        JButton startButton = new JButton("Start");
+        final JFrame gameScreen = new KeyPress();
+        gameScreen.setVisible(false);
+        startButton.addActionListener(new ActionListener()
+            {
+                public void actionPerformed(ActionEvent e)
+                {
+                    //                     CardLayout cl = (CardLayout)(cards.getLayout());
+                    //                     cl.show(cards, GAME_SCREEN);
+                    // code to load KeyPress
+                    gameScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    gameScreen.setPreferredSize(new Dimension(2500, 900));
+                    gameScreen.pack();
+                    gameScreen.setVisible(true);
+                    gameScreen.setResizable(false);
+                }
+            });
+        //I plan on using this button to open up an "About" or an "Instructions Manual" txt file that has controls, premise, and credits.
+        card1.add(startButton);
+        JButton aboutButton = new JButton("About");
+        aboutButton.addActionListener(new ActionListener()
+            {
+                public void actionPerformed(ActionEvent e)
+                {
+                    try
+                    {
+                        BufferedReader br = new BufferedReader(new FileReader("about.txt"));
+                        String line = null;
+                        while((line = br.readLine()) != null)
+                        {
+                            System.out.println(line);
+                        }
+                    }
+                    catch(IOException i)
+                    {
+                        System.out.println("Error. File not found.");
+                    }
+                }
+            });
+        card1.add(aboutButton);
+        JButton exitButton = new JButton("Quit");
+        card1.add(exitButton);
+        exitButton.addActionListener(new ActionListener()
+            {
+                public void actionPerformed(ActionEvent e)
+                {
+                    System.exit(0);
+                }
+            });
+
+        // JPanel card2 = new KeyPress();
+
+        //Create the panel that contains the "cards".
+        cards = new JPanel(new CardLayout());
+        cards.add(card1, START_SCREEN);
+        // cards.add(card2, GAME_SCREEN);
+
+        pane.add(cards, BorderLayout.CENTER);
+    }
+
+    public void itemStateChanged(ItemEvent evt) {
+        CardLayout cl = (CardLayout)(cards.getLayout());
+        cl.show(cards, (String)evt.getItem());
+    }
+
+    /**
+     * Create the GUI and show it.  For thread safety,
+     * this method should be invoked from the
+     * event dispatch thread.
+     */
+    private static void createAndShowGUI() {
+        //Create and set up the window.
+        JFrame frame = new JFrame("Start Screen");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        //Create and set up the content pane.
+        StartScreen demo = new StartScreen();
+        demo.addComponentToPane(frame.getContentPane());
+
+        //Display the window.
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        // Use an appropriate Look and Feel
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+        } catch (UnsupportedLookAndFeelException ex) {
+            ex.printStackTrace();
+        } catch (IllegalAccessException ex) {
+            ex.printStackTrace();
+        } catch (InstantiationException ex) {
+            ex.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+        }
+        /* Turn off metal's use of bold fonts */
+        UIManager.put("swing.boldMetal", Boolean.FALSE);
+
+        //Schedule a job for the event dispatch thread:
+        //creating and showing this application's GUI.
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    createAndShowGUI();
+                }
+            });
+    }
+}
