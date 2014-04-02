@@ -25,9 +25,11 @@ public class KeyPress extends JFrame {
     public KeyPress() {
         // set layout to GridBagLayout. Optimal look and feel
         setLayout(new GridBagLayout());
+        Color color = new Color(75, 75, 200);
         GridBagConstraints c = new GridBagConstraints();
         currentWidth = panel.getWidth() / 2;
         currentHeight = panel.getHeight() / 2;
+        panel.setBackground(color);
         hummingBirdLabel.setLocation(currentWidth, currentHeight);
         progressBar.setMaximumSize(new Dimension(100, 500));
         progressBar.setValue(hummingBirdLabel.getHealth());
