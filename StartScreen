@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.io.*;
+import javax.sound.sampled.*;
 public class StartScreen
 {
     JPanel cards; //a panel that uses CardLayout
@@ -22,8 +23,7 @@ public class StartScreen
             {
                 public void actionPerformed(ActionEvent e)
                 {
-                    //                     CardLayout cl = (CardLayout)(cards.getLayout());
-                    //                     cl.show(cards, GAME_SCREEN);
+                    playTune();
                     // code to load KeyPress
                     gameScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                     gameScreen.setPreferredSize(new Dimension(2500, 900));
@@ -122,5 +122,20 @@ public class StartScreen
                     createAndShowGUI();
                 }
             });
+    }
+    
+    public void playTune()
+    {
+        Clip clip;
+        File f = new File("sound.wav");
+        try//enters a try-catch statement
+        {
+            AudioInputStream audio = AudioSystem.getAudioInputStream(f);//gets the audio from the file
+            clip = AudioSystem.getClip();//obtains a clip that can be used for playing back an audio file or an audio stream.
+            clip.open(audio);//opens the audio
+            clip.start();//starts the clip
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        }
+        catch (Exception e){System.out.println(e.getMessage());}
     }
 }
