@@ -6,10 +6,6 @@ import javax.swing.*;
 import java.util.*;
 import java.util.Timer;
 
-import java.io.*;
-import javax.sound.sampled.*;
-
-
 public class KeyPress extends JFrame {
     private ImageIcon hummingBirdImage = new ImageIcon("hummingbird.gif");
     private JLabel healthLabel = new JLabel("Health");
@@ -19,13 +15,11 @@ public class KeyPress extends JFrame {
     private JProgressBar progressBar = new JProgressBar(0, 100);
     private Hummingbird hummingBirdLabel = new Hummingbird(hummingBirdImage);
     private int currentWidth, currentHeight;
-    private Panel panel = new Panel();
+    private JPanel panel = new JPanel();
     private Random r = new Random();
-    private Clip clip;
     private ImageIcon flowerImage = new ImageIcon("flower.png");
     private JLabel flowerLabel = new JLabel(flowerImage);
     private ImageIcon enemyImage = new ImageIcon("enemy.gif");
-    //     private Enemy enemy = new Enemy(enemyImage);
     private java.util.List<Enemy> listOfEnemies = new ArrayList<Enemy>();
 
     public KeyPress() {
@@ -39,7 +33,6 @@ public class KeyPress extends JFrame {
         progressBar.setValue(hummingBirdLabel.getHealth());
         setFocusable(true);
         addKeyListener(new HummingBirdKeyListener());
-        playTune();
 
         c.fill = GridBagConstraints.HORIZONTAL;
         c.ipadx = 100;
@@ -70,7 +63,6 @@ public class KeyPress extends JFrame {
         for(int i = 0; i <= 5; i++){            
             Enemy currentEnemy = new Enemy(enemyImage);
             listOfEnemies.add(currentEnemy);
-            currentEnemy.setLocation(r.nextInt(panel.getWidth() - 100),r.nextInt(panel.getHeight() - 100));
             panel.add(currentEnemy);
         }
 
@@ -107,6 +99,7 @@ public class KeyPress extends JFrame {
         }
     }
 
+    //class for handling bird movement and overlap instances
     public class HummingBirdKeyListener extends KeyAdapter {
         // can do a .contains() with Set
         Set<Character> keyList = new HashSet<Character>();
@@ -149,6 +142,7 @@ public class KeyPress extends JFrame {
                 if (isOverlap(enemy, hummingBirdLabel)) {
                     hummingBirdLabel.addHealth(-10);
                     progressBar.setValue(hummingBirdLabel.getHealth());
+                    enemy.setLocation(r.nextInt(KeyPress.this.getWidth() - 100),r.nextInt(KeyPress.this.getHeight() - 100));
                     repaint();
                 }
                 if(hummingBirdLabel.getHealth() == 0){
@@ -191,6 +185,7 @@ public class KeyPress extends JFrame {
             return isUpperLeftCornerInBounds && isLowerRightCornerInBounds;
         }
 
+        //public method for checking whether or not the hummingbird and the flower/enemy overlap
         public boolean isOverlap(JLabel a, Hummingbird b) {
             int ax1 = a.getX();
             int ax2 = ax1 + a.getWidth();
@@ -218,18 +213,5 @@ public class KeyPress extends JFrame {
             }
             return false;
         }
-    }
-    public void playTune()
-    {
-        File f = new File("sound.mp3");
-        try//enters a try-catch statement
-        {
-            AudioInputStream audio = AudioSystem.getAudioInputStream(f);//gets the audio from the file
-            clip = AudioSystem.getClip();//obtains a clip that can be used for playing back an audio file or an audio stream.
-            clip.open(audio);//opens the audio
-            clip.start();//starts the clip
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-        }
-        catch (Exception e){System.out.println(e.getMessage());}
     }
 }
