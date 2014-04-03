@@ -203,7 +203,7 @@ public class KeyPress extends JFrame {
                     endScreen.add(restartGameButton);
                     endScreen.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
                     endScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-                    endScreen.setPreferredSize(new Dimension(300, 100));
+                    endScreen.setPreferredSize(new Dimension(300, 200));
                     endScreen.pack();
                     endScreen.setVisible(true);
                     endScreen.setResizable(false);
