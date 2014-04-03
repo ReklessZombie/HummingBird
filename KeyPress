@@ -1,41 +1,55 @@
 import java.awt.*;
 import java.awt.event.*;
-
 import javax.swing.*;
 
 import java.util.*;
 import java.util.Timer;
 
 public class KeyPress extends JFrame {
+    private int points = 0;
+    JLabel pointLabel = new JLabel("Points: 0");
     private ImageIcon hummingBirdImage = new ImageIcon("hummingbird.gif");
     private JLabel healthLabel = new JLabel("Health");
-    private JButton endGame = new JButton("Nope");
-    private JButton restartGame = new JButton("Yes plz");
     private static final String UPDATE_PROGRESS = "Update Progress";
     private JProgressBar progressBar = new JProgressBar(0, 100);
     private Hummingbird hummingBirdLabel = new Hummingbird(hummingBirdImage);
     private int currentWidth, currentHeight;
-    private JPanel panel = new JPanel();
+    private Panel panel = new Panel();
     private Random r = new Random();
     private ImageIcon flowerImage = new ImageIcon("flower.png");
     private JLabel flowerLabel = new JLabel(flowerImage);
     private ImageIcon enemyImage = new ImageIcon("enemy.gif");
+
+    private JLayeredPane layeredPane = new JLayeredPane();
+    private ImageIcon backgroundImage = new ImageIcon("background1.jpg");
+    private JLabel backgroundLabel = new JLabel(backgroundImage);
+
+    //     private Enemy enemy = new Enemy(enemyImage);
     private java.util.List<Enemy> listOfEnemies = new ArrayList<Enemy>();
 
     public KeyPress() {
         // set layout to GridBagLayout. Optimal look and feel
+
+        backgroundLabel.setBounds(0,0,backgroundImage.getIconWidth(),backgroundImage.getIconHeight());
+        flowerLabel.setBounds(0,0,flowerImage.getIconWidth(),flowerImage.getIconHeight());
+        hummingBirdLabel.setBounds(0,0,hummingBirdImage.getIconWidth(),hummingBirdImage.getIconHeight());
+
+        layeredPane.add(backgroundLabel,1);
+        layeredPane.add(flowerLabel,0);
+        layeredPane.add(hummingBirdLabel,0);
+        layeredPane.setPreferredSize(new Dimension(backgroundImage.getIconWidth(), backgroundImage.getIconWidth()));
+
         setLayout(new GridBagLayout());
-        Color color = new Color(75, 75, 200);
         GridBagConstraints c = new GridBagConstraints();
         currentWidth = panel.getWidth() / 2;
         currentHeight = panel.getHeight() / 2;
-        panel.setBackground(color);
         hummingBirdLabel.setLocation(currentWidth, currentHeight);
         progressBar.setMaximumSize(new Dimension(100, 500));
         progressBar.setValue(hummingBirdLabel.getHealth());
         setFocusable(true);
         addKeyListener(new HummingBirdKeyListener());
 
+        setSize(100,100);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.ipadx = 100;
         c.gridx = 0;
@@ -48,25 +62,30 @@ public class KeyPress extends JFrame {
         add(healthLabel, c);
 
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.ipady = 650;
-        c.ipadx = 1250;
+        c.gridx = 0;
+        c.gridy = 2;
+        add(pointLabel, c);
+
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.ipady = backgroundImage.getIconHeight();
+        c.ipadx = backgroundImage.getIconWidth();
         c.weightx = 0.0;
         c.gridwidth = 3;
         c.gridx = 0;
-        c.gridy = 2;
+        c.gridy = 3;
         add(panel, c);
 
-        panel.add(hummingBirdLabel, BorderLayout.CENTER);
-        setVisible(true);
-
-        panel.add(flowerLabel, BorderLayout.SOUTH);
         flowerLabel.setLocation(r.nextInt(400), r.nextInt(400));
-
-        for(int i = 0; i <= 5; i++){            
+        for(int i = 0; i <= 3; i++){            
             Enemy currentEnemy = new Enemy(enemyImage);
             listOfEnemies.add(currentEnemy);
-            panel.add(currentEnemy);
+            currentEnemy.setBounds(r.nextInt(backgroundImage.getIconWidth() - (currentEnemy.getWidth()/2)),
+                r.nextInt(backgroundImage.getIconHeight() - (currentEnemy.getHeight())), enemyImage.getIconWidth(), enemyImage.getIconHeight());
+            layeredPane.add(currentEnemy,0);
         }
+
+        panel.add(layeredPane);
+        setVisible(true);
 
         Timer moveEnemiesTimer = new Timer();
         moveEnemiesTimer.schedule(new MoveEnemies(), 0, 100);
@@ -101,10 +120,10 @@ public class KeyPress extends JFrame {
         }
     }
 
-    //class for handling bird movement and overlap instances
     public class HummingBirdKeyListener extends KeyAdapter {
         // can do a .contains() with Set
         Set<Character> keyList = new HashSet<Character>();
+        boolean isDead = false;
 
         public void keyPressed(KeyEvent ke) {
             // KeyPress.this.enemy.run();
@@ -134,38 +153,60 @@ public class KeyPress extends JFrame {
             hummingBirdLabel.setLocation(currentWidth, currentHeight);
             if (isOverlap(flowerLabel, hummingBirdLabel)) {
                 flowerLabel.setLocation(
-                    r.nextInt(KeyPress.this.getWidth() - 100),
-                    r.nextInt(KeyPress.this.getHeight() - 100));
+                    r.nextInt(backgroundImage.getIconWidth() - (flowerLabel.getWidth()/2)),
+                    r.nextInt(backgroundImage.getIconHeight() - (flowerLabel.getHeight())));
                 hummingBirdLabel.addHealth(10);
                 progressBar.setValue(hummingBirdLabel.getHealth());
+                points++;
+                pointLabel.setText("Points: " + points);
                 repaint();
             }
             for(Enemy enemy : listOfEnemies){
                 if (isOverlap(enemy, hummingBirdLabel)) {
                     hummingBirdLabel.addHealth(-10);
                     progressBar.setValue(hummingBirdLabel.getHealth());
-                    enemy.setLocation(r.nextInt(KeyPress.this.getWidth() - 100),r.nextInt(KeyPress.this.getHeight() - 100));
                     repaint();
                 }
-                if(hummingBirdLabel.getHealth() == 0){
-                    JPanel endScreen = new JPanel();
-                    endScreen.setVisible(false);
-                    restartGame.addActionListener(new ActionListener()
+                if(hummingBirdLabel.getHealth() <= 0 && !isDead){
+                    isDead = true;
+                    FlowLayout buttonLayout = new FlowLayout();
+                    final JFrame endScreen = new JFrame("Game Over");
+                    JLabel pointsMessage = new JLabel("You got " + points + " points.");
+                    JLabel message = new JLabel("Would you like to play again?");
+                    JButton restartGameButton = new JButton("Yes");
+                    JButton endGameButton = new JButton("Nope");
+                    restartGameButton.addActionListener(new ActionListener()
                         {
                             public void actionPerformed(ActionEvent e)
                             {
-                                KeyPress newGame = new KeyPress();
+                                resetGame();
+                                endScreen.setVisible(false);
                             }
                         });
-                    endScreen.add(restartGame);
-                    endGame.addActionListener(new ActionListener()
+
+                    endGameButton.addActionListener(new ActionListener()
                         {
                             public void actionPerformed(ActionEvent e)
                             {
                                 System.exit(0);
                             }
                         });
-                    endScreen.add(endGame);
+                    Dimension buttonDimension = new Dimension(100, 50);
+                    restartGameButton.setSize(buttonDimension);
+                    endGameButton.setSize(buttonDimension);
+                    restartGameButton.setPreferredSize(buttonDimension);
+                    endGameButton.setPreferredSize(buttonDimension);
+                    endScreen.setLayout(buttonLayout);
+                    endScreen.add(pointsMessage);
+                    endScreen.add(message);
+                    endScreen.add(endGameButton);
+                    endScreen.add(restartGameButton);
+                    endScreen.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+                    endScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    endScreen.setPreferredSize(new Dimension(300, 100));
+                    endScreen.pack();
+                    endScreen.setVisible(true);
+                    endScreen.setResizable(false);
                 }
             }
         }
@@ -187,7 +228,6 @@ public class KeyPress extends JFrame {
             return isUpperLeftCornerInBounds && isLowerRightCornerInBounds;
         }
 
-        //public method for checking whether or not the hummingbird and the flower/enemy overlap
         public boolean isOverlap(JLabel a, Hummingbird b) {
             int ax1 = a.getX();
             int ax2 = ax1 + a.getWidth();
@@ -215,5 +255,13 @@ public class KeyPress extends JFrame {
             }
             return false;
         }
+
+        public void resetGame(){
+            hummingBirdLabel.resetHealth();
+            progressBar.setValue( hummingBirdLabel.getHealth());
+            hummingBirdLabel.setLocation(0, 0);
+            isDead = false;
+        }
     }
+
 }
