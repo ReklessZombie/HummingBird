@@ -2,7 +2,9 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.io.*;
+import javax.imageio.*;
 import javax.sound.sampled.*;
+
 public class StartScreen
 {
     JPanel cards; //a panel that uses CardLayout
@@ -18,22 +20,22 @@ public class StartScreen
         //starts the game
         JButton startButton = new JButton("Start");
         final JFrame gameScreen = new KeyPress();
+        gameScreen.setVisible(true);
         gameScreen.setVisible(false);
         startButton.addActionListener(new ActionListener()
             {
                 public void actionPerformed(ActionEvent e)
                 {
-                    playTune();
-                    // code to load KeyPress
                     gameScreen.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                     gameScreen.setPreferredSize(new Dimension(2500, 900));
                     gameScreen.pack();
                     gameScreen.setVisible(true);
                     gameScreen.setResizable(false);
+                    playTune();
                 }
             });
-        //I plan on using this button to open up an "About" or an "Instructions Manual" txt file that has controls, premise, and credits.
         card1.add(startButton);
+        
         JButton aboutButton = new JButton("About");
         aboutButton.addActionListener(new ActionListener()
             {
@@ -123,7 +125,7 @@ public class StartScreen
                 }
             });
     }
-    
+
     public void playTune()
     {
         Clip clip;
